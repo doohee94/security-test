@@ -1,8 +1,14 @@
-package com.example.securitytest.config;
+package com.example.securitytest.security.config;
 
+import java.util.ArrayList;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.AuthenticationProvider;
+import org.springframework.security.authentication.DefaultAuthenticationEventPublisher;
+import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -14,6 +20,8 @@ import org.springframework.security.web.SecurityFilterChain;
 @RequiredArgsConstructor
 @EnableGlobalMethodSecurity(securedEnabled = true, prePostEnabled = true)
 public class SecurityConfig {
+
+  private final AuthenticationProvider authenticationProvider;
 
   @Bean
   public SecurityFilterChain filterChain(HttpSecurity security) throws Exception {
@@ -40,5 +48,20 @@ public class SecurityConfig {
 
     return security.build();
   }
+
+  @Bean
+  public AuthenticationManager authenticationManagerBean() {
+    List<AuthenticationProvider> authenticationProviderList = new ArrayList<>();
+    authenticationProviderList.add(authenticationProvider);
+    ProviderManager authenticationManager = new ProviderManager(authenticationProviderList);
+    authenticationManager.setAuthenticationEventPublisher(defaultAuthenticationEventPublisher());
+    return authenticationManager;
+  }
+
+  @Bean
+  DefaultAuthenticationEventPublisher defaultAuthenticationEventPublisher() {
+    return new DefaultAuthenticationEventPublisher();
+  }
+
 
 }
