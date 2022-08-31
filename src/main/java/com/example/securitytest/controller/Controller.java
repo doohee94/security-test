@@ -16,8 +16,23 @@ public class Controller {
   private final AuthService authService;
 
   @PostMapping("/login")
-  public TokenDto login(@RequestBody LoginDto loginDto){
+  public TokenDto login(@RequestBody LoginDto loginDto) {
     return authService.login(loginDto);
+  }
+
+  @GetMapping("/all")
+  public String test() {
+    return "all";
+  }
+
+  @GetMapping("/admin")
+  public String test3() {
+    return "admin";
+  }
+
+  @GetMapping("/user")
+  public String test4() {
+    return "user";
   }
 
 }

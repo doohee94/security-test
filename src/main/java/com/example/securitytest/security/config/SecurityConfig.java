@@ -1,5 +1,8 @@
 package com.example.securitytest.security.config;
 
+import com.example.securitytest.security.jwt.JWTFilter;
+import com.example.securitytest.security.model.CustomAccessDeniedHandler;
+import com.example.securitytest.security.model.CustomAuthenticationEntryPoint;
 import java.util.ArrayList;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -14,6 +17,7 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @Configuration
 @EnableWebSecurity
@@ -22,6 +26,11 @@ import org.springframework.security.web.SecurityFilterChain;
 public class SecurityConfig {
 
   private final AuthenticationProvider authenticationProvider;
+  private final JWTFilter jwtFilter;
+  private final CustomAccessDeniedHandler customAccessDeniedHandler;
+  private final CustomAuthenticationEntryPoint customAuthenticationEntryPoint;
+
+
 
   @Bean
   public SecurityFilterChain filterChain(HttpSecurity security) throws Exception {
@@ -38,9 +47,18 @@ public class SecurityConfig {
             "/configuration/security", "/configuration/ui",
             "/css/**", "/js/**", "/img/**"
         ).permitAll()
-        .antMatchers("/admin").hasRole("ROLE_ADMIN")
+        .antMatchers("/admin").hasRole("ADMIN")
+        .antMatchers("/user").hasRole("USER")
         .antMatchers("/**").permitAll()
         .anyRequest().authenticated();
+
+    security
+        .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
+
+    security
+        .exceptionHandling()
+        .accessDeniedHandler(customAccessDeniedHandler)
+        .authenticationEntryPoint(customAuthenticationEntryPoint);
 
     security.formLogin().disable();
 
