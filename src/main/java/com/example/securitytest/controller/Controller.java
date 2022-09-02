@@ -4,7 +4,6 @@ import com.example.securitytest.security.service.AuthService;
 import com.example.securitytest.user.dto.LoginDto;
 import com.example.securitytest.user.dto.TokenDto;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -22,20 +21,32 @@ public class Controller {
   }
 
   @GetMapping("/company")
-  @PreAuthorize("hasRole('COMPANY')")
   public String company() {
     return "company";
   }
 
   @GetMapping("/admin")
-  @PreAuthorize("hasRole('ADMIN')")
   public String admin() {
     return "admin";
   }
 
   @GetMapping("/user")
-  @PreAuthorize("hasRole('USER')")
   public String user() {
+    return "user";
+  }
+
+  @PostMapping("/company")
+  public String companyPost() {
+    return "company";
+  }
+
+  @PostMapping("/admin")
+  public String adminPost() {
+    return "admin";
+  }
+
+  @PostMapping("/user")
+  public String userPost() {
     return "user";
   }
 
