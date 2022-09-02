@@ -8,6 +8,8 @@ import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.access.hierarchicalroles.RoleHierarchy;
+import org.springframework.security.access.hierarchicalroles.RoleHierarchyImpl;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.DefaultAuthenticationEventPublisher;
@@ -23,14 +25,12 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @EnableWebSecurity
 @RequiredArgsConstructor
 @EnableGlobalMethodSecurity(securedEnabled = true, prePostEnabled = true)
-public class SecurityConfig {
+public class SecurityConfig{
 
   private final AuthenticationProvider authenticationProvider;
   private final JWTFilter jwtFilter;
   private final CustomAccessDeniedHandler customAccessDeniedHandler;
   private final CustomAuthenticationEntryPoint customAuthenticationEntryPoint;
-
-
 
   @Bean
   public SecurityFilterChain filterChain(HttpSecurity security) throws Exception {
@@ -47,10 +47,11 @@ public class SecurityConfig {
             "/configuration/security", "/configuration/ui",
             "/css/**", "/js/**", "/img/**"
         ).permitAll()
-        .antMatchers("/admin").hasRole("ADMIN")
-        .antMatchers("/user").hasRole("USER")
+//        .antMatchers("/admin").hasRole("ADMIN")
+//        .antMatchers("/user").hasRole("USER")
         .antMatchers("/**").permitAll()
-        .anyRequest().authenticated();
+        .anyRequest().authenticated()
+    ;
 
     security
         .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
@@ -81,5 +82,11 @@ public class SecurityConfig {
     return new DefaultAuthenticationEventPublisher();
   }
 
+  @Bean
+  public RoleHierarchy roleHierarchy() {
+    RoleHierarchyImpl roleHierarchy = new RoleHierarchyImpl();
+    roleHierarchy.setHierarchy("ROLE_ADMIN > ROLE_COMPANY > ROLE_USER");
+    return roleHierarchy;
+  }
 
 }

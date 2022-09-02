@@ -9,17 +9,18 @@ import io.restassured.parsing.Parser;
 import io.restassured.response.ExtractableResponse;
 import io.restassured.response.Response;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.junit.jupiter.api.TestMethodOrder;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
-import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ActiveProfiles;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles(profiles = {"test"})
+@TestMethodOrder(MethodOrderer.MethodName.class)
 class ControllerTest {
 
   @Value("${local.server.port}")
@@ -33,47 +34,11 @@ class ControllerTest {
     RestAssured.defaultParser = Parser.JSON;
   }
 
-  @Test
-  void 로그인_테스트(){
-    //given
-    LoginDto loginDto = new LoginDto();
-    loginDto.setName("admin");
-    loginDto.setPassword("admin");
-
-    //when
-    ExtractableResponse<Response> response = RestAssured
-        .given().log().all()
-        .contentType(MediaType.APPLICATION_JSON_VALUE)
-        .body(loginDto)
-        .when().post("/login")
-        .then().log().all().extract();
-
-    //then
-    assertThat(response.statusCode()).isEqualTo(HttpStatus.OK.value());
-
-  }
 
   @Test
-  void 유효하지_않는_토큰으로_API_호출(){
+  void ADMIN_권한으로_admin_호출_200(){
     //given
-    String token = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJzZWN1cml0eS10ZXN0IiwidXNlcl9uYW1lIjoiYWRtaW4iLCJCZWFyZXIiOiJST0xFX0FETUlOIiwiZXhwIjoxNjYxOTI0NDYzfQ.NJzHCEoZj2Qxgk27uf_7rG_T2RQRLXhwnQAaPNbz2obk4o8nLI-mSgupuStQ9OiNJ2PD2E367fpJJybbbQPkhQ";
-
-    //when
-    ExtractableResponse<Response> response = RestAssured
-        .given().log().all()
-        .header("Authorization", "Bearer " + token)
-        .contentType(MediaType.APPLICATION_JSON_VALUE)
-        .when().get("/all")
-        .then().log().all().extract();
-
-    //then
-    assertThat(response.statusCode()).isEqualTo(HttpStatus.UNAUTHORIZED.value());
-  }
-
-  @Test
-  void ADMIN_권한으로_admin_호출(){
-    //given
-    TokenDto loginDto = getLoginDto();
+    TokenDto loginDto = getLoginDto("admin");
 
     //when
     ExtractableResponse<Response> response = RestAssured
@@ -88,9 +53,9 @@ class ControllerTest {
   }
 
   @Test
-  void ADMIN_권한으로_user_호출(){
+  void ADMIN_권한으로_user_호출_200(){
     //given
-    TokenDto loginDto = getLoginDto();
+    TokenDto loginDto = getLoginDto("admin");
 
     //when
     ExtractableResponse<Response> response = RestAssured
@@ -101,27 +66,134 @@ class ControllerTest {
         .then().log().all().extract();
 
     //then
+    assertThat(response.statusCode()).isEqualTo(HttpStatus.OK.value());
+  }
+
+  @Test
+  void ADMIN_권한으로_company_호출_200(){
+    //given
+    TokenDto loginDto = getLoginDto("admin");
+
+    //when
+    ExtractableResponse<Response> response = RestAssured
+        .given().log().all()
+        .header("Authorization", "Bearer " + loginDto.getAccessToken())
+        .contentType(MediaType.APPLICATION_JSON_VALUE)
+        .when().get("/company")
+        .then().log().all().extract();
+
+    //then
+    assertThat(response.statusCode()).isEqualTo(HttpStatus.OK.value());
+  }
+
+  @Test
+  void USER_권한으로_user_호출_200(){
+    //given
+    TokenDto loginDto = getLoginDto("user");
+
+    //when
+    ExtractableResponse<Response> response = RestAssured
+        .given().log().all()
+        .header("Authorization", "Bearer " + loginDto.getAccessToken())
+        .contentType(MediaType.APPLICATION_JSON_VALUE)
+        .when().get("/user")
+        .then().log().all().extract();
+
+    //then
+    assertThat(response.statusCode()).isEqualTo(HttpStatus.OK.value());
+  }
+
+  @Test
+  void USER_권한으로_company_호출_403(){
+    //given
+    TokenDto loginDto = getLoginDto("user");
+
+    //when
+    ExtractableResponse<Response> response = RestAssured
+        .given().log().all()
+        .header("Authorization", "Bearer " + loginDto.getAccessToken())
+        .contentType(MediaType.APPLICATION_JSON_VALUE)
+        .when().get("/company")
+        .then().log().all().extract();
+
+    //then
     assertThat(response.statusCode()).isEqualTo(HttpStatus.FORBIDDEN.value());
   }
 
   @Test
-  void HEADER_없이_admin_호출(){
+  void USER_권한으로_admin_호출_403(){
+    //given
+    TokenDto loginDto = getLoginDto("user");
+
     //when
     ExtractableResponse<Response> response = RestAssured
         .given().log().all()
+        .header("Authorization", "Bearer " + loginDto.getAccessToken())
         .contentType(MediaType.APPLICATION_JSON_VALUE)
         .when().get("/admin")
         .then().log().all().extract();
 
     //then
-    assertThat(response.statusCode()).isEqualTo(HttpStatus.UNAUTHORIZED.value());
+    assertThat(response.statusCode()).isEqualTo(HttpStatus.FORBIDDEN.value());
+  }
+
+  @Test
+  void COMPANY_권한으로_company_호출_200(){
+    //given
+    TokenDto loginDto = getLoginDto("company");
+
+    //when
+    ExtractableResponse<Response> response = RestAssured
+        .given().log().all()
+        .header("Authorization", "Bearer " + loginDto.getAccessToken())
+        .contentType(MediaType.APPLICATION_JSON_VALUE)
+        .when().get("/company")
+        .then().log().all().extract();
+
+    //then
+    assertThat(response.statusCode()).isEqualTo(HttpStatus.OK.value());
+  }
+
+  @Test
+  void COMPANY_권한으로_user_호출_200(){
+    //given
+    TokenDto loginDto = getLoginDto("company");
+
+    //when
+    ExtractableResponse<Response> response = RestAssured
+        .given().log().all()
+        .header("Authorization", "Bearer " + loginDto.getAccessToken())
+        .contentType(MediaType.APPLICATION_JSON_VALUE)
+        .when().get("/user")
+        .then().log().all().extract();
+
+    //then
+    assertThat(response.statusCode()).isEqualTo(HttpStatus.OK.value());
+  }
+
+  @Test
+  void COMPANY_권한으로_admin_호출_403(){
+    //given
+    TokenDto loginDto = getLoginDto("company");
+
+    //when
+    ExtractableResponse<Response> response = RestAssured
+        .given().log().all()
+        .header("Authorization", "Bearer " + loginDto.getAccessToken())
+        .contentType(MediaType.APPLICATION_JSON_VALUE)
+        .when().get("/admin")
+        .then().log().all().extract();
+
+    //then
+    assertThat(response.statusCode()).isEqualTo(HttpStatus.FORBIDDEN.value());
   }
 
 
-  private TokenDto getLoginDto() {
+
+  private TokenDto getLoginDto(String role) {
     LoginDto loginDto = new LoginDto();
-    loginDto.setName("admin");
-    loginDto.setPassword("admin");
+    loginDto.setName(role);
+    loginDto.setPassword(role);
 
     //when
     ExtractableResponse<Response> response = RestAssured
