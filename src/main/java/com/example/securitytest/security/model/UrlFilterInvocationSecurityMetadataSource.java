@@ -84,4 +84,7 @@ public class UrlFilterInvocationSecurityMetadataSource implements
   }
 
 
+  public void reset(Map<RequestMatcher, List<ConfigAttribute>> requestMap) {
+    this.requestMap = requestMap;
+  }
 }

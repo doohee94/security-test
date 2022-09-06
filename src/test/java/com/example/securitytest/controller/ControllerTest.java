@@ -8,6 +8,7 @@ import io.restassured.RestAssured;
 import io.restassured.parsing.Parser;
 import io.restassured.response.ExtractableResponse;
 import io.restassured.response.Response;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Nested;
@@ -34,7 +35,14 @@ class ControllerTest {
       RestAssured.port = port;
     }
     RestAssured.defaultParser = Parser.JSON;
+
+    RestAssured
+        .given().log().all()
+        .contentType(MediaType.APPLICATION_JSON_VALUE)
+        .when().post("/reset")
+        .then().log().all().extract();
   }
+
 
   @Nested
   class POST_테스트{

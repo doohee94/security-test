@@ -93,7 +93,7 @@ public class SecurityConfig {
     filterSecurityInterceptor
         .setSecurityMetadataSource(urlFilterInvocationSecurityMetadataSource());
     filterSecurityInterceptor.setAccessDecisionManager(affirmativeBased());
-    filterSecurityInterceptor.setAuthenticationManager(authenticationManagerBean());
+
     return filterSecurityInterceptor;
   }
 

@@ -1,6 +1,7 @@
 package com.example.securitytest.controller;
 
 import com.example.securitytest.security.service.AuthService;
+import com.example.securitytest.security.service.SecurityService;
 import com.example.securitytest.user.dto.LoginDto;
 import com.example.securitytest.user.dto.TokenDto;
 import lombok.RequiredArgsConstructor;
@@ -14,6 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class Controller {
 
   private final AuthService authService;
+  private final SecurityService securityService;
 
   @PostMapping("/login")
   public TokenDto login(@RequestBody LoginDto loginDto) {
@@ -50,4 +52,9 @@ public class Controller {
     return "user";
   }
 
+  @PostMapping("/reset")
+  public String reset() {
+    securityService.resetAuthorities();
+    return "reset";
+  }
 }
